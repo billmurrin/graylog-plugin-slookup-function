@@ -1,4 +1,4 @@
-package com.example.plugins.strlen;
+package org.graylog.plugins.slookup;
 
 import org.graylog2.plugin.Plugin;
 import org.graylog2.plugin.PluginMetaData;
@@ -10,11 +10,11 @@ import java.util.Collections;
 public class StringLengthFunctionPlugin implements Plugin {
     @Override
     public PluginMetaData metadata() {
-        return new StringLengthFunctionMetaData();
+        return new StreamLookupFunctionMetaData();
     }
 
     @Override
     public Collection<PluginModule> modules () {
-        return Collections.<PluginModule>singletonList(new StringLengthFunctionModule());
+        return Collections.<PluginModule>singletonList(new StreamLookupFunctionModule());
     }
 }

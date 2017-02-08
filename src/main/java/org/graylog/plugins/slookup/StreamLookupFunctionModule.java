@@ -1,4 +1,4 @@
-package com.example.plugins.strlen;
+package org.graylog.plugins.slookup;
 
 import com.google.inject.Binder;
 import com.google.inject.TypeLiteral;
@@ -10,7 +10,7 @@ import org.graylog2.plugin.PluginModule;
 import java.util.Collections;
 import java.util.Set;
 
-public class StringLengthFunctionModule extends PluginModule {
+public class StreamLookupFunctionModule extends PluginModule {
 
     @Override
     public Set<? extends PluginConfigBean> getConfigBeans() {
@@ -19,7 +19,7 @@ public class StringLengthFunctionModule extends PluginModule {
 
     @Override
     protected void configure() {
-        addMessageProcessorFunction(StringLengthFunction.NAME, StringLengthFunction.class);
+        addMessageProcessorFunction(StreamLookupFunction.NAME, StreamLookupFunction.class);
     }
 
     protected void addMessageProcessorFunction(String name, Class<? extends Function<?>> functionClass) {

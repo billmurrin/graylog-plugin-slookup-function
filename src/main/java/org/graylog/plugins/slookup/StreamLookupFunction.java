@@ -1,4 +1,4 @@
-package com.example.plugins.strlen;
+package org.graylog.plugins.slookup;
 
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
 import org.graylog.plugins.pipelineprocessor.ast.expressions.Expression;
@@ -7,14 +7,18 @@ import org.graylog.plugins.pipelineprocessor.ast.functions.FunctionArgs;
 import org.graylog.plugins.pipelineprocessor.ast.functions.FunctionDescriptor;
 import org.graylog.plugins.pipelineprocessor.ast.functions.ParameterDescriptor;
 
-public class StringLengthFunction implements Function<Integer> {
+public class StreamLookupFunction {
 
-    public static final String NAME = "string_length";
+    public static final String NAME = "slookup";
     private static final String PARAM = "string";
+    private static final String PARAM2 = "string";
+    private static final String PARAM3 = "string";
 
     private final ParameterDescriptor<String, String> valueParam = ParameterDescriptor
             .string(PARAM)
-            .description("The string to calculate the length of. For example, passing 'foo' will return 3.")
+            .string(PARAM2)
+            .string(PARAM3)
+            .description("The field to return the value of. For example, passing 'foo' will return 3.")
             .build();
 
     @Override

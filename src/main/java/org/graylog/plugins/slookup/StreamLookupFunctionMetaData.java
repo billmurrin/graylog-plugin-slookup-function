@@ -1,4 +1,4 @@
-package com.example.plugins.strlen;
+package org.graylog.plugins.slookup;
 
 import org.graylog2.plugin.PluginMetaData;
 import org.graylog2.plugin.ServerStatus;
@@ -8,12 +8,12 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Set;
 
-public class StringLengthFunctionMetaData implements PluginMetaData {
-    private static final String PLUGIN_PROPERTIES = "com.example.plugins.graylog-plugin-function-strlen/graylog-plugin.properties";
+public class StreamLookupFunctionMetaData implements PluginMetaData {
+    private static final String PLUGIN_PROPERTIES = "org/graylog/plugins/slookup/graylog-plugin.properties";
 
     @Override
     public String getUniqueId() {
-        return "com.example.plugins.strlen.StringLengthFunctionPlugin";
+        return "StringLengthFunctionPlugin";
     }
 
     @Override

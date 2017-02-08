@@ -2,23 +2,34 @@ package org.graylog.plugins.slookup;
 
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
 import org.graylog.plugins.pipelineprocessor.ast.expressions.Expression;
-import org.graylog.plugins.pipelineprocessor.ast.functions.Function;
-import org.graylog.plugins.pipelineprocessor.ast.functions.FunctionArgs;
-import org.graylog.plugins.pipelineprocessor.ast.functions.FunctionDescriptor;
-import org.graylog.plugins.pipelineprocessor.ast.functions.ParameterDescriptor;
+import org.graylog.plugins.pipelineprocessor.ast.functions.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class StreamLookupFunction {
+public class StreamLookupFunction extends AbstractFunction<String> {
+    Logger log = LoggerFactory.getLogger(Function.class);
 
     public static final String NAME = "slookup";
-    private static final String PARAM = "string";
-    private static final String PARAM2 = "string";
-    private static final String PARAM3 = "string";
+    private static final String STREAM_ARG = "string";
+    private static final String SRC_FIELD_ARG = "string";
+    private static final String DST_FIELD_ARG = "string";
+    private static final String RTN_FIELD_ARG = "string";
 
-    private final ParameterDescriptor<String, String> valueParam = ParameterDescriptor
-            .string(PARAM)
-            .string(PARAM2)
-            .string(PARAM3)
-            .description("The field to return the value of. For example, passing 'foo' will return 3.")
+    private final ParameterDescriptor<String, String> streamParam = ParameterDescriptor
+            .string(STREAM_ARG)
+            .description("The stream to look up the source field.")
+            .build();
+    private final ParameterDescriptor<String, String> srcFieldParam = ParameterDescriptor
+            .string(SRC_FIELD_ARG)
+            .description("The source field to lookup and match in the stream.")
+            .build();
+    private final ParameterDescriptor<String, String> dstFieldParam = ParameterDescriptor
+            .string(DST_FIELD_ARG)
+            .description("The destination field that will be matched against with the source field. If blank, uses the value of the source field.")
+            .build();
+    private final ParameterDescriptor<String, String> rtnFieldParam = ParameterDescriptor
+            .string(RTN_FIELD_ARG)
+            .description("The field to return if there is a value match.")
             .build();
 
     @Override
@@ -27,24 +38,24 @@ public class StreamLookupFunction {
     }
 
     @Override
-    public Integer evaluate(FunctionArgs functionArgs, EvaluationContext evaluationContext) {
-        String target = valueParam.required(functionArgs, evaluationContext);
+    public String evaluate(FunctionArgs functionArgs, EvaluationContext evaluationContext) {
+        String target = streamParam.required(functionArgs, evaluationContext);
 
-        if (target == null) {
-            return 0;
-        }
+        //if (target == null) {
+        //    return 0;
+        //}
 
-        return target.length();
+        //return target.length();
+        return target;
     }
 
     @Override
-    public FunctionDescriptor<Integer> descriptor() {
-        return FunctionDescriptor.<Integer>builder()
+    public FunctionDescriptor<String> descriptor() {
+        return FunctionDescriptor.<String>builder()
                 .name(NAME)
                 .description("Returns the length of a string")
-                .params(valueParam)
-                .returnType(Integer.class)
+                .params(streamParam)
+                .returnType(String.class)
                 .build();
     }
-
 }

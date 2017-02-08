@@ -13,22 +13,22 @@ public class StreamLookupFunctionMetaData implements PluginMetaData {
 
     @Override
     public String getUniqueId() {
-        return "StringLengthFunctionPlugin";
+        return "StreamLookupFunction";
     }
 
     @Override
     public String getName() {
-        return "String length pipeline function";
+        return "Stream Lookup (SLookup) pipeline function";
     }
 
     @Override
     public String getAuthor() {
-        return "John Doe <you@example.org>";
+        return "Bill Murrin <bill@billmurrin.com>";
     }
 
     @Override
     public URI getURL() {
-        return URI.create("https://github.com/YourGitHubUsername/graylog-plugin-function-strlen");
+        return URI.create("https://github.com/billmurrin/graylog-plugin-slookup-function");
     }
 
     @Override
@@ -38,12 +38,12 @@ public class StreamLookupFunctionMetaData implements PluginMetaData {
 
     @Override
     public String getDescription() {
-        return "Pipeline function that returns the length of a string.";
+        return "VLOOKUP for the Process Pipeline! Matches the value of a source field with a destination field in a remote stream. Will return the value of the field name provided as the return field if a match is found.";
     }
 
     @Override
     public Version getRequiredVersion() {
-        return Version.fromPluginProperties(getClass(), PLUGIN_PROPERTIES, "graylog.version", Version.from(2, 1, 1));
+        return Version.fromPluginProperties(getClass(), PLUGIN_PROPERTIES, "graylog.version", Version.from(2, 1, 3));
     }
 
     @Override

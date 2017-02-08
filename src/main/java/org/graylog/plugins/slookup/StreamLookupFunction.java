@@ -3,8 +3,13 @@ package org.graylog.plugins.slookup;
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
 import org.graylog.plugins.pipelineprocessor.ast.expressions.Expression;
 import org.graylog.plugins.pipelineprocessor.ast.functions.*;
+import org.graylog2.indexer.searches.Searches;
+import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
+import org.graylog2.plugin.indexer.searches.timeranges.RelativeRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.naming.directory.SearchResult;
 
 public class StreamLookupFunction extends AbstractFunction<String> {
     Logger log = LoggerFactory.getLogger(Function.class);
@@ -14,6 +19,10 @@ public class StreamLookupFunction extends AbstractFunction<String> {
     private static final String SRC_FIELD_ARG = "string";
     private static final String DST_FIELD_ARG = "string";
     private static final String RTN_FIELD_ARG = "string";
+    private static final String TIMERANGE_ARG = "integer";
+
+    private final Searches searches;
+    private final TimeRange timeRange;
 
     private final ParameterDescriptor<String, String> streamParam = ParameterDescriptor
             .string(STREAM_ARG)
@@ -31,6 +40,10 @@ public class StreamLookupFunction extends AbstractFunction<String> {
             .string(RTN_FIELD_ARG)
             .description("The field to return if there is a value match.")
             .build();
+    private final ParameterDescriptor<String, String> timeRangeParam = ParameterDescriptor
+            .string(TIMERANGE_ARG)
+            .description("Relative Time Range")
+            .build();
 
     @Override
     public Object preComputeConstantArgument(FunctionArgs functionArgs, String s, Expression expression) {
@@ -39,7 +52,11 @@ public class StreamLookupFunction extends AbstractFunction<String> {
 
     @Override
     public String evaluate(FunctionArgs functionArgs, EvaluationContext evaluationContext) {
+
         String target = streamParam.required(functionArgs, evaluationContext);
+        this.timeRange = RelativeRange.create(43200);
+        //search(java.lang.String query, java.lang.String filter, org.graylog2.plugin.indexer.searches.timeranges.TimeRange range, int limit, int offset, org.graylog2.indexer.searches.Sorting sorting)
+        final SearchResult search = this.searches.search("query", "filter", "43200", 1, 0, "desc");
 
         //if (target == null) {
         //    return 0;

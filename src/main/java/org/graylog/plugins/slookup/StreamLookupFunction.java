@@ -3,16 +3,18 @@ package org.graylog.plugins.slookup;
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
 import org.graylog.plugins.pipelineprocessor.ast.expressions.Expression;
 import org.graylog.plugins.pipelineprocessor.ast.functions.*;
+import org.graylog2.indexer.results.ScrollResult;
 import org.graylog2.indexer.searches.Searches;
+import org.graylog2.indexer.searches.Sorting;
 import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
 import org.graylog2.plugin.indexer.searches.timeranges.RelativeRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.naming.directory.SearchResult;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StreamLookupFunction extends AbstractFunction<String> {
-    Logger log = LoggerFactory.getLogger(Function.class);
+    Logger LOG = LoggerFactory.getLogger(Function.class);
 
     public static final String NAME = "slookup";
     private static final String STREAM_ARG = "string";
@@ -21,8 +23,12 @@ public class StreamLookupFunction extends AbstractFunction<String> {
     private static final String RTN_FIELD_ARG = "string";
     private static final String TIMERANGE_ARG = "integer";
 
-    private final Searches searches;
-    private final TimeRange timeRange;
+    private String query;
+    private String filter;
+    private Searches searches;
+    private TimeRange timeRange;
+    private Sorting sortType;
+    private List<String> fields = new ArrayList<>();
 
     private final ParameterDescriptor<String, String> streamParam = ParameterDescriptor
             .string(STREAM_ARG)
@@ -53,25 +59,53 @@ public class StreamLookupFunction extends AbstractFunction<String> {
     @Override
     public String evaluate(FunctionArgs functionArgs, EvaluationContext evaluationContext) {
 
-        String target = streamParam.required(functionArgs, evaluationContext);
-        this.timeRange = RelativeRange.create(43200);
+        String stream = streamParam.required(functionArgs, evaluationContext);
+        String srcField = srcFieldParam.required(functionArgs, evaluationContext);
+        String dstField = dstFieldParam.required(functionArgs, evaluationContext);
+        String rtnField = rtnFieldParam.required(functionArgs, evaluationContext);
+        Integer timeRange = Integer.parseInt(timeRangeParam.required(functionArgs, evaluationContext));
+
+        this.fields.add(rtnField);
+        ScrollResult search;
+
+        //Currently defaulting to 12 hours
+        this.timeRange = RelativeRange.builder().range(timeRange).build();
+        LOG.debug("The TimeRange is " + this.timeRange);
+
+        // Trying to build a query string here.
+        this.query = dstField + ":" + evaluationContext.currentMessage().getField(srcField).toString();
+        LOG.debug("This query: " + this.query);
+
+        this.filter = "streams:" + stream;
+        LOG.debug("This filter: " + this.filter);
+
+        // Attempt to do the search here.
+        //ScrollResult scroll(String query, TimeRange range, int limit, int offset, List<String> fields, String filter)
+        search = this.searches.scroll(this.query, this.timeRange, 1, 0, fields, this.filter);
         //search(java.lang.String query, java.lang.String filter, org.graylog2.plugin.indexer.searches.timeranges.TimeRange range, int limit, int offset, org.graylog2.indexer.searches.Sorting sorting)
-        final SearchResult search = this.searches.search("query", "filter", "43200", 1, 0, "desc");
+        //SearchResult search = this.searches.search(this.query, this.filter, this.timeRange, 1, 0, new Sorting("timestamp", Sorting.Direction.DESC));
+
+        // Echo the results
+        LOG.debug(search.toString());
 
         //if (target == null) {
         //    return 0;
         //}
 
         //return target.length();
-        return target;
+        return search.toString();
     }
 
     @Override
     public FunctionDescriptor<String> descriptor() {
         return FunctionDescriptor.<String>builder()
                 .name(NAME)
-                .description("Returns the length of a string")
+                .description("Conduct a lookup in a remote stream and return a field value based on a matching source field. Similar to VLOOKUP in Excel")
                 .params(streamParam)
+                .params(srcFieldParam)
+                .params(dstFieldParam)
+                .params(rtnFieldParam)
+                .params(timeRangeParam)
                 .returnType(String.class)
                 .build();
     }

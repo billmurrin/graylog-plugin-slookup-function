@@ -1,13 +1,7 @@
 GrayLog Stream Lookup (SLookup) PipeLine Processor Function
 ============================================
 
-The GrayLog Stream Lookup (SLookup) Pipeline Processor function facilitates lookups from within other streams using a field in the current stream and a remote field as the matching parameter.
 
-For example, say I have two streams, one contains some source IPs from internal hosts and the other stream contains host information such as IP and MAC addresses. 
-
-The SLookup function makes it possible to retrieve the value of MAC address from the other stream where it matches the IP address.
-
-The thought behind this function is implementation of similar functionality to the VLOOKUP function in Excel.
 
 Travis CI
 ---------

@@ -1,5 +1,6 @@
 package org.graylog.plugins.slookup;
 
+import org.graylog.plugins.slookup.StreamLookupFunction;
 import com.google.inject.Binder;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;

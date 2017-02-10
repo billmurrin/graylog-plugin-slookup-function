@@ -7,7 +7,7 @@ import org.graylog2.plugin.PluginModule;
 import java.util.Collection;
 import java.util.Collections;
 
-public class StreamLookupFunctionPlusin implements Plugin {
+public class StreamLookupFunctionPlugin implements Plugin {
     @Override
     public PluginMetaData metadata() {
         return new StreamLookupFunctionMetaData();

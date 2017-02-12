@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.Set;
 
 public class StreamLookupFunctionMetaData implements PluginMetaData {
-    private static final String PLUGIN_PROPERTIES = "org/graylog/plugins/slookup/graylog-plugin.properties";
+    private static final String PLUGIN_PROPERTIES = "org/graylog/plugins/graylog-plugin-slookup-function/graylog-plugin.properties";
 
     @Override
     public String getUniqueId() {

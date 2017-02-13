@@ -57,8 +57,8 @@
         <resources>
             <resource><directory>build</directory></resource>
             <resource>
-              <directory>src/main/resources</directory>
-              <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
             </resource>
         </resources>
         <plugins>

@@ -13,7 +13,7 @@ public class StreamLookupFunctionMetaData implements PluginMetaData {
 
     @Override
     public String getUniqueId() {
-        return "StreamLookupFunction";
+        return "org.graylog.plugins.slookup.StreamLookupFunctionPlugin";
     }
 
     @Override

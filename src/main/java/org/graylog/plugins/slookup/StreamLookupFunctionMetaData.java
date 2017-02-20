@@ -18,7 +18,7 @@ public class StreamLookupFunctionMetaData implements PluginMetaData {
 
     @Override
     public String getName() {
-        return "Stream Lookup (SLookup) pipeline function";
+        return "Stream Lookup pipeline function";
     }
 
     @Override
@@ -33,7 +33,7 @@ public class StreamLookupFunctionMetaData implements PluginMetaData {
 
     @Override
     public Version getVersion() {
-        return Version.fromPluginProperties(getClass(), PLUGIN_PROPERTIES, "version", Version.from(1, 0, 0, "unknown"));
+        return Version.fromPluginProperties(getClass(), PLUGIN_PROPERTIES, "version", Version.from(0, 0, 0, "unknown"));
     }
 
     @Override

@@ -1,10 +1,13 @@
 package org.graylog.plugins.slookup;
 
-//import com.sun.org.apache.regexp.internal.RE;
-import org.graylog2.indexer.results.ScrollResult;
-//import org.graylog2.indexer.results.SearchResult;
+//import org.graylog2.indexer.results.ScrollResult;
+import jdk.nashorn.internal.runtime.regexp.joni.Config;
+import org.elasticsearch.action.search.SearchPhaseExecutionException;
+import org.graylog2.indexer.results.SearchResult;
+import org.graylog2.indexer.searches.SearchesConfig;
 import org.graylog2.indexer.searches.Searches;
 import org.graylog2.indexer.searches.Sorting;
+import org.graylog2.indexer.ranges.IndexRangeService;
 import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
 import org.graylog2.plugin.indexer.searches.timeranges.RelativeRange;
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
@@ -13,6 +16,9 @@ import org.graylog.plugins.pipelineprocessor.ast.functions.*;
 import static com.google.common.collect.ImmutableList.of;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.graylog2.Configuration;
+import org.elasticsearch.client.Client;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,10 +34,13 @@ public class StreamLookupFunction extends AbstractFunction<String> {
 
     private String query;
     private String filter;
-    private Searches searches;
     private TimeRange timeRange;
     private Sorting sortType;
-    private List<String> fields = new ArrayList<>();
+    private Searches searches;
+    private SearchResult response;
+    //private final Configuration configuration = new;
+    //private final IndexRangeService indexRangeService;
+    //private final Client c;
 
     private final ParameterDescriptor<String, String> streamParam = ParameterDescriptor
             .string(STREAM_ARG)
@@ -61,49 +70,69 @@ public class StreamLookupFunction extends AbstractFunction<String> {
 
     @Override
     public String evaluate(FunctionArgs functionArgs, EvaluationContext evaluationContext) {
-
+        LOG.info(evaluationContext.toString());
+        //this.searches = new Searches(this.configuration, )
         String stream = streamParam.required(functionArgs, evaluationContext);
         String srcField = srcFieldParam.required(functionArgs, evaluationContext);
         String dstField = dstFieldParam.required(functionArgs, evaluationContext);
         String rtnField = rtnFieldParam.required(functionArgs, evaluationContext);
         Integer timeRange = Integer.parseInt(timeRangeParam.required(functionArgs, evaluationContext));
+        boolean decorate = true;
+        List<String> fields = new ArrayList<>();
 
-        this.fields.add(rtnField);
-        ScrollResult search;
-        //SearchResult search2;
 
-        LOG.debug("Stream is " + stream);
-        LOG.debug("srcField is " + srcField);
-        LOG.debug("dstField is " + dstField);
-        LOG.debug("rtnField is " + rtnField);
-        LOG.debug("timeRange is " + timeRange.toString());
+        fields.add(rtnField);
+        //ScrollResult search;
+
+
+        LOG.info("Stream is " + stream);
+        LOG.info("srcField is " + srcField);
+        LOG.info("dstField is " + dstField);
+        LOG.info("rtnField is " + rtnField);
+        LOG.info("timeRange is " + timeRange.toString());
 
         //Currently defaulting to 12 hours
         this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
-        LOG.debug("The TimeRange is " + this.timeRange);
+        LOG.info("The TimeRange is " + this.timeRange);
 
         // Trying to build a query string here.
         this.query = dstField + ":" + evaluationContext.currentMessage().getField(srcField).toString();
-        LOG.debug("This query: " + this.query);
+        LOG.info("This query: " + this.query);
 
         this.filter = "streams:" + stream;
-        LOG.debug("This filter: " + this.filter);
+        LOG.info("This filter: " + this.filter);
+
+        LOG.info("This fields" + fields.toString());
+
+        final SearchesConfig searchesConfig = SearchesConfig.builder()
+                .query(this.query)
+                .filter(this.filter)
+                .fields(fields)
+                .range(this.timeRange)
+                .limit(1)
+                .offset(0)
+                .build();
+
+        LOG.info("Config is " + searchesConfig.toString());
 
         // Attempt to do the search here.
         //ScrollResult scroll(String query, TimeRange range, int limit, int offset, List<String> fields, String filter)
-        search = this.searches.scroll(this.query, this.timeRange, 1, 0, fields, this.filter);
+        //search = this.searches.scroll(this.query, this.timeRange, 1, 0, fields, this.filter);
         //search(java.lang.String query, java.lang.String filter, org.graylog2.plugin.indexer.searches.timeranges.TimeRange range, int limit, int offset, org.graylog2.indexer.searches.Sorting sorting)
-        //search2 = this.searches.search(this.query, this.filter, this.timeRange, 1, 0, new Sorting("timestamp", Sorting.Direction.DESC));
-
-        // Echo the resultsg
-        LOG.debug(search.nextChunk().getMessages().toString());
+        try {
+            LOG.info("Trying the search");
+            response = this.searches.search(searchesConfig);
+            LOG.info("Response results" + response.getResults().toString());
+        } catch(SearchPhaseExecutionException e) {
+            LOG.info("Unable to execute search: {}", e.getMessage());
+        }
 
         //if (target == null) {
         //    return 0;
         //}
 
         //return target.length();
-        return search.nextChunk().getMessages().toString();
+        return response.getResults().toString();
     }
 
     @Override

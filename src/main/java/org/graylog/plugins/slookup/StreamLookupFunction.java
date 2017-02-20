@@ -1,8 +1,8 @@
 package org.graylog.plugins.slookup;
 
-import com.sun.org.apache.regexp.internal.RE;
+//import com.sun.org.apache.regexp.internal.RE;
 import org.graylog2.indexer.results.ScrollResult;
-import org.graylog2.indexer.results.SearchResult;
+//import org.graylog2.indexer.results.SearchResult;
 import org.graylog2.indexer.searches.Searches;
 import org.graylog2.indexer.searches.Sorting;
 import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
@@ -96,14 +96,14 @@ public class StreamLookupFunction extends AbstractFunction<String> {
         //search2 = this.searches.search(this.query, this.filter, this.timeRange, 1, 0, new Sorting("timestamp", Sorting.Direction.DESC));
 
         // Echo the resultsg
-        LOG.debug(search.toString());
+        LOG.debug(search.nextChunk().getMessages().toString());
 
         //if (target == null) {
         //    return 0;
         //}
 
         //return target.length();
-        return search.toString();
+        return search.nextChunk().getMessages().toString();
     }
 
     @Override

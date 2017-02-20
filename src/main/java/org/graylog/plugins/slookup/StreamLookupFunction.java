@@ -1,6 +1,8 @@
 package org.graylog.plugins.slookup;
 
+import com.sun.org.apache.regexp.internal.RE;
 import org.graylog2.indexer.results.ScrollResult;
+import org.graylog2.indexer.results.SearchResult;
 import org.graylog2.indexer.searches.Searches;
 import org.graylog2.indexer.searches.Sorting;
 import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
@@ -8,6 +10,7 @@ import org.graylog2.plugin.indexer.searches.timeranges.RelativeRange;
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
 import org.graylog.plugins.pipelineprocessor.ast.expressions.Expression;
 import org.graylog.plugins.pipelineprocessor.ast.functions.*;
+import static com.google.common.collect.ImmutableList.of;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
@@ -17,11 +20,11 @@ public class StreamLookupFunction extends AbstractFunction<String> {
     Logger LOG = LoggerFactory.getLogger(Function.class);
 
     public static final String NAME = "slookup";
-    private static final String STREAM_ARG = "string";
-    private static final String SRC_FIELD_ARG = "string";
-    private static final String DST_FIELD_ARG = "string";
-    private static final String RTN_FIELD_ARG = "string";
-    private static final String TIMERANGE_ARG = "integer";
+    private static final String STREAM_ARG = "stream";
+    private static final String SRC_FIELD_ARG = "srcField";
+    private static final String DST_FIELD_ARG = "dstField";
+    private static final String RTN_FIELD_ARG = "rtnField";
+    private static final String TIMERANGE_ARG = "timeRange";
 
     private String query;
     private String filter;
@@ -67,9 +70,16 @@ public class StreamLookupFunction extends AbstractFunction<String> {
 
         this.fields.add(rtnField);
         ScrollResult search;
+        //SearchResult search2;
+
+        LOG.debug("Stream is " + stream);
+        LOG.debug("srcField is " + srcField);
+        LOG.debug("dstField is " + dstField);
+        LOG.debug("rtnField is " + rtnField);
+        LOG.debug("timeRange is " + timeRange.toString());
 
         //Currently defaulting to 12 hours
-        this.timeRange = RelativeRange.builder().range(timeRange).build();
+        this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
         LOG.debug("The TimeRange is " + this.timeRange);
 
         // Trying to build a query string here.
@@ -83,9 +93,9 @@ public class StreamLookupFunction extends AbstractFunction<String> {
         //ScrollResult scroll(String query, TimeRange range, int limit, int offset, List<String> fields, String filter)
         search = this.searches.scroll(this.query, this.timeRange, 1, 0, fields, this.filter);
         //search(java.lang.String query, java.lang.String filter, org.graylog2.plugin.indexer.searches.timeranges.TimeRange range, int limit, int offset, org.graylog2.indexer.searches.Sorting sorting)
-        //SearchResult search = this.searches.search(this.query, this.filter, this.timeRange, 1, 0, new Sorting("timestamp", Sorting.Direction.DESC));
+        //search2 = this.searches.search(this.query, this.filter, this.timeRange, 1, 0, new Sorting("timestamp", Sorting.Direction.DESC));
 
-        // Echo the results
+        // Echo the resultsg
         LOG.debug(search.toString());
 
         //if (target == null) {
@@ -101,12 +111,10 @@ public class StreamLookupFunction extends AbstractFunction<String> {
         return FunctionDescriptor.<String>builder()
                 .name(NAME)
                 .description("Conduct a lookup in a remote stream and return a field value based on a matching source field. Similar to VLOOKUP in Excel")
-                .params(streamParam)
-                .params(srcFieldParam)
-                .params(dstFieldParam)
-                .params(rtnFieldParam)
-                .params(timeRangeParam)
+                .params(of(streamParam, srcFieldParam, dstFieldParam, rtnFieldParam, timeRangeParam))
                 .returnType(String.class)
                 .build();
     }
+
+
 }

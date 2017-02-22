@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/billmurrin/graylog-plugin-slookup-function.svg?branch=master)](https://travis-ci.org/billmurrin/graylog-plugin-slookup-function)
 
 The GrayLog Stream Lookup (SLookup) Pipeline Processor function
 ---

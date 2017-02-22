@@ -9,7 +9,7 @@ For example, say there are two streams, one contains some http logs with source 
        
 In the example above, you might want to return the mac_address field where the value of src_ip matches ip_address.
 
-The thought behind this function is to implement similar functionality to the **VLOOKUP** function in Excel. It should be noted that as of this revision.
+The thought behind this function is to implement similar functionality to the **VLOOKUP** function in Excel.
 
 With features like index sets being introduced in Graylog 2.2, it becomes possible to use GrayLog to store dumps of smaller information stores that can help enriching data that can be used to enrich other stream data with Pipeline Processor rules.
 

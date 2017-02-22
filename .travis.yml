@@ -23,5 +23,6 @@ deploy:
     - "${RELEASE_RPM_FILE}"
   skip_cleanup: true
   on:
+    repo: billmurrin/graylog-plugin-slookup-function
     tags: true
     jdk: oraclejdk8

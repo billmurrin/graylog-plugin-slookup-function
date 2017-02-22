@@ -2,21 +2,21 @@ sudo: required
 dist: trusty
 language: java
 jdk:
-  - oraclejdk8
+- oraclejdk8
 addons:
   apt:
     packages:
-      - rpm
+    - rpm
 before_deploy:
-  - mvn jdeb:jdeb && export RELEASE_DEB_FILE=$(ls target/*.deb)
-  - mvn rpm:rpm && export RELEASE_RPM_FILE=$(find target/ -name '*.rpm' | tail -1)
-  - rm -f target/original-*.jar
-  - export RELEASE_PKG_FILE=$(ls target/*.jar)
-  - echo "Deploying release to GitHub releases"
+- mvn jdeb:jdeb && export RELEASE_DEB_FILE=$(ls target/*.deb)
+- mvn rpm:rpm && export RELEASE_RPM_FILE=$(find target/ -name '*.rpm' | tail -1)
+- rm -f target/original-*.jar
+- export RELEASE_PKG_FILE=$(ls target/*.jar)
+- echo "Deploying release to GitHub releases"
 deploy:
   provider: releases
   api_key:
-    secure: <enter your encrypted GitHub access token>
+    secure: VjclOkJyveZsRnGJS95ho26y0bRMnv+dXaVLuLoaNC0BLeVc6wBAtq36K/e6/hc90b6ozUyqivSJBv9om06/RKhqG5rpN7iXbaqN6rVnky96MKqXw6It++KX9HcI1ix98dKi4+JknfoAoGau153Ddvx+zovS0R9Erup2AcDSQ6SFGq+Zm69lOgNUBjwQtJ7cSY+xPqusRsdcUK/WsvD2OADWSRBe38HdyYGRKrsa/0wBZkNchHJ7USFbeShRky3OJpXuBy6ay0+TRj4Qijvvc+gI3nlZiAB7UPX9Kzwk0A9H+qa7tUMLNvhrKYRuHSpelhSSoCeLPl5Ji5RgBxufuvhEWjR7OdKKOY+WC2u7lyHfWHGCFiVXQiuH52/vcJFVh5B8poEsuIbooue9HBcj1KuW64RUGfZ/KUKS99cEaX/LQ/vKlWq8C8dxgaTwfpWHVA7ZaYnPWlN77ih6xCq3K8upzg5GmrVpIyE60Ykz0+UC3rO+Ucm+LbrYKdPZnIZOG5X5HLr+b1Xy80vM6YSUKe18ZqWXTWj4q3oxJDubiYmeaKxSVG9uzjtLhrblr2gSn0zLzQzzbOkfSixZ29ltPJd5KdDRyudHI/AIHJg8X26VqNIKkomHQ8AdtFKwuBCfNRCHTmu7lLsY5w6T21sMvjfaxzAWlJx2HR6BLnDitlU=
   file:
     - "${RELEASE_PKG_FILE}"
     - "${RELEASE_DEB_FILE}"

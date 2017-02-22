@@ -13,6 +13,8 @@ The thought behind this function is to implement similar functionality to the **
 
 With features like index sets being introduced in Graylog 2.2, it becomes possible to use GrayLog to store dumps of smaller information stores that can help enriching data that can be used to enrich other stream data with Pipeline Processor rules.
 
+**Compiled and tested with Graylog 2.2.1**
+
 Function Breakdown
 ---
 

@@ -7,7 +7,7 @@ SLookup facilitates lookups within other streams using a field in the current st
        
 For example, say there are two streams, one contains some http logs with source IPs (E.g. src_ip) from internal hosts and the other stream contains information about the systems on the network such as IP address (E.g. ip_address), computer name (E.g. computer_name), MAC address (E.g. mac_address), OU, make/model, etc. 
        
-In the example above, you might want to return the mac_address field where the value of src_ip is the value of ip_address.
+In the example above, you might want to return the mac_address field where the value of src_ip matches ip_address.
 
 The thought behind this function is to implement similar functionality to the **VLOOKUP** function in Excel. It should be noted that as of this revision.
 

@@ -102,7 +102,7 @@ public class StreamLookupFunction extends AbstractFunction<String> {
         try {
             SearchResult response = this.searches.search(searchesConfig);
             if (response.getResults().size() == 0) {
-                LOG.info("No Search Results observed.");
+                LOG.debug("No Search Results observed.");
                 return "";
             }
             else
@@ -110,7 +110,7 @@ public class StreamLookupFunction extends AbstractFunction<String> {
                 List<ResultMessage> resultMessages = response.getResults();
                 Message msg = resultMessages.get(0).getMessage();
                 String returnField = msg.getField(rtnField).toString();
-                LOG.info("The return field is {}, the value is {}", rtnField, returnField);
+                LOG.debug("The return field is {}, the value is {}", rtnField, returnField);
                 if (returnField.isEmpty()) {
                     return "";
                 }
@@ -120,7 +120,7 @@ public class StreamLookupFunction extends AbstractFunction<String> {
                 }
             }
         } catch(SearchPhaseExecutionException e) {
-            LOG.info("Unable to execute search: {}", e.getMessage());
+            LOG.debug("Unable to execute search: {}", e.getMessage());
             return "";
         }
     }

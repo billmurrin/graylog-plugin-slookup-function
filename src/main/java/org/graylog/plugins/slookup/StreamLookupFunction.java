@@ -99,35 +99,30 @@ public class StreamLookupFunction extends AbstractFunction<String> {
                 .offset(0)
                 .build();
 
-        LOG.info("Config is " + searchesConfig.toString());
-
-        // Attempt to do the search here.
-        //search = this.searches.scroll(this.query, this.timeRange, 1, 0, fields, this.filter);
-
         try {
-            LOG.info("Trying the search");
-            response = this.searches.search(searchesConfig);
-            if (response.getTotalResults() == 0) {
+            SearchResult response = this.searches.search(searchesConfig);
+            if (response.getResults().size() == 0) {
                 LOG.info("No Search Results observed.");
-                return null;
+                return "";
             }
             else
             {
-                LOG.info("Response Total Results: {}", response.getTotalResults());
-                LOG.info("SearchResult size: {}", response.getResults().size());
-                for (ResultMessage resultMessage : response.getResults()) {
-                    Message msg = resultMessage.getMessage();
-                    LOG.info("The Message: {}", msg.toString());
-                    LOG.info("Index is {}", resultMessage.getIndex());
+                List<ResultMessage> resultMessages = response.getResults();
+                Message msg = resultMessages.get(0).getMessage();
+                String returnField = msg.getField(rtnField).toString();
+                LOG.info("The return field is {}, the value is {}", rtnField, returnField);
+                if (returnField.isEmpty()) {
+                    return "";
                 }
-                //LOG.info("Response results: {}", summaries.get(0).toString());
+                else
+                {
+                    return returnField;
+                }
             }
         } catch(SearchPhaseExecutionException e) {
             LOG.info("Unable to execute search: {}", e.getMessage());
-            return null;
+            return "";
         }
-
-        return response.getFields().toString();
     }
 
     @Override

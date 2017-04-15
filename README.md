@@ -1,3 +1,5 @@
+[![Github Downloads](https://img.shields.io/github/downloads/billmurrin/graylog-plugin-slookup-function/total.svg)](https://github.com/billmurrin/graylog-plugin-slookup-function/releases)
+[![GitHub Release](https://img.shields.io/github/release/billmurrin/graylog-plugin-slookup-function.svg)](https://github.com/billmurrin/graylog-plugin-slookup-function/releases)
 [![Build Status](https://travis-ci.org/billmurrin/graylog-plugin-slookup-function.svg?branch=master)](https://travis-ci.org/billmurrin/graylog-plugin-slookup-function)
 
 The GrayLog Stream Lookup (SLookup) Pipeline Processor function
@@ -13,7 +15,7 @@ The thought behind this function is to implement similar functionality to the **
 
 With features like index sets being introduced in Graylog 2.2, it becomes possible to use GrayLog to store smaller information stores that can be used to enrich other stream data with Pipeline Processor rules.
 
-**Compiled and tested with Graylog 2.2.1**
+**Compiled and tested with Graylog 2.2.1, 2.2.2 and 2.2.3**
 
 Function Breakdown
 ---

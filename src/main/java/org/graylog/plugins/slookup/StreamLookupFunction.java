@@ -1,15 +1,12 @@
 package org.graylog.plugins.slookup;
 
-//import org.graylog2.indexer.results.ScrollResult;
-import com.google.common.collect.Lists;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.graylog2.indexer.results.ResultMessage;
 import org.graylog2.indexer.results.SearchResult;
 import org.graylog2.indexer.searches.SearchesConfig;
-import org.graylog2.indexer.searches.Searches;
 import org.graylog2.indexer.searches.Sorting;
+import org.graylog2.indexer.searches.Searches;
 import org.graylog2.plugin.Message;
-import org.graylog2.plugin.MessageSummary;
 import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
 import org.graylog2.plugin.indexer.searches.timeranges.RelativeRange;
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
@@ -32,6 +29,7 @@ public class StreamLookupFunction extends AbstractFunction<String> {
     private static final String DST_FIELD_ARG = "dstField";
     private static final String RTN_FIELD_ARG = "rtnField";
     private static final String TIMERANGE_ARG = "timeRange";
+    private static final String SORTORDER_ARG = "sortOrder";
 
     private String query;
     private String filter;
@@ -65,6 +63,10 @@ public class StreamLookupFunction extends AbstractFunction<String> {
             .string(TIMERANGE_ARG)
             .description("Relative Time Range")
             .build();
+    private final ParameterDescriptor<String, String> sortOrderParam = ParameterDescriptor
+            .string(SORTORDER_ARG)
+            .description("Sorting Order - asc or desc")
+            .build();
 
     @Override
     public Object preComputeConstantArgument(FunctionArgs functionArgs, String s, Expression expression) {
@@ -78,6 +80,7 @@ public class StreamLookupFunction extends AbstractFunction<String> {
         String dstField = dstFieldParam.required(functionArgs, evaluationContext);
         String rtnField = rtnFieldParam.required(functionArgs, evaluationContext);
         Integer timeRange = Integer.parseInt(timeRangeParam.required(functionArgs, evaluationContext));
+        String sortField = sortOrderParam.required(functionArgs, evaluationContext);
 
         List<String> fields = new ArrayList<>();
 
@@ -85,24 +88,35 @@ public class StreamLookupFunction extends AbstractFunction<String> {
 
         this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
 
-        // Trying to build a query string here.
         this.query = dstField + ":" + evaluationContext.currentMessage().getField(srcField).toString();
 
         this.filter = "streams:" + stream;
+
+        if (sortField.equals("asc")) {
+            this.sortType = new Sorting("timestamp", Sorting.Direction.ASC);
+            LOG.debug("This sortType  - field: {}, order: {}", this.sortType.getField().toString(), this.sortType.asElastic().toString());
+        }
+        else
+        {
+            this.sortType = new Sorting("timestamp", Sorting.Direction.DESC);
+            LOG.debug("This sortType  - field: {}, order: {}", this.sortType.getField().toString(), this.sortType.asElastic().toString());
+        }
 
         final SearchesConfig searchesConfig = SearchesConfig.builder()
                 .query(this.query)
                 .filter(this.filter)
                 .fields(fields)
                 .range(this.timeRange)
+                .sorting(this.sortType)
                 .limit(1)
                 .offset(0)
                 .build();
 
         try {
             SearchResult response = this.searches.search(searchesConfig);
+            LOG.debug("Search config - field: {}, order: {}", searchesConfig.sorting().getField().toString(), searchesConfig.sorting().asElastic().toString());
             if (response.getResults().size() == 0) {
-                LOG.debug("No Search Results observed.");
+                LOG.info("No Search Results observed.");
                 return "";
             }
             else
@@ -130,7 +144,7 @@ public class StreamLookupFunction extends AbstractFunction<String> {
         return FunctionDescriptor.<String>builder()
                 .name(NAME)
                 .description("Conduct a lookup in a remote stream and return a field value based on a matching source field. Similar to VLOOKUP in Excel")
-                .params(of(streamParam, srcFieldParam, dstFieldParam, rtnFieldParam, timeRangeParam))
+                .params(of(streamParam, srcFieldParam, dstFieldParam, rtnFieldParam, timeRangeParam, sortOrderParam))
                 .returnType(String.class)
                 .build();
     }

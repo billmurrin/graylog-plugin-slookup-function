@@ -16,7 +16,7 @@ import static com.google.common.collect.ImmutableList.of;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -81,12 +81,20 @@ public class StreamLookupFunction extends AbstractFunction<List> {
         List<String> rtnFields = (List<String>) rtnFieldsParam.required(functionArgs, evaluationContext);
         Integer timeRange = Integer.parseInt(timeRangeParam.required(functionArgs, evaluationContext));
         String sortField = sortOrderParam.required(functionArgs, evaluationContext);
+        List<String> resultList = new ArrayList<String>();
+        List<String> blankList = new ArrayList<String>();
+
+        for (String rtnfl : rtnFields) {
+            blankList.add("No match found");
+        }
 
         this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
 
         this.query = dstField + ":" + evaluationContext.currentMessage().getField(srcField).toString();
+        LOG.debug("Query: {}", this.query.toString());
 
         this.filter = "streams:" + stream;
+        LOG.debug("Filter: {}", this.filter.toString());
 
         if (sortField.equals("asc")) {
             this.sortType = new Sorting("timestamp", Sorting.Direction.ASC);
@@ -109,39 +117,62 @@ public class StreamLookupFunction extends AbstractFunction<List> {
                 .build();
 
         try {
-
             SearchResult response = this.searches.search(searchesConfig);
             LOG.debug("Search config - field: {}, order: {}", searchesConfig.sorting().getField().toString(), searchesConfig.sorting().asElastic().toString());
             if (response.getResults().size() == 0) {
-                LOG.info("No Search Results observed.");
-                return Collections.emptyList();
+                LOG.debug("No Search Results observed.");
+                return blankList;
             }
             else
             {
-                List<String> resultList = Collections.emptyList();
-                List<ResultMessage> resultMessages = response.getResults();
-                Message msg = resultMessages.get(0).getMessage();
-                for(String rtnField : rtnFields) {
-                    String returnField = msg.getField(rtnField).toString();
-                    if (!returnField.isEmpty()) {
-                        resultList.add(returnField);
-                    } else {
-                        resultList.add("");
-                    }
-                }
 
-                LOG.debug("The return field(s) are {}, the value is {}", rtnFields.toString(), resultList.toString());
-                if (resultList.isEmpty()) {
-                    return Collections.emptyList();
-                }
-                else
-                {
-                    return resultList;
+                if (response.getResults().size() >= 1) {
+                    LOG.debug("There are results");
+                    List<ResultMessage> resultMessages = response.getResults();
+                    try {
+                        //Map<String, Object> resultFields = resultMessages.get(0).getMessage().getFields();
+                        Message msg = resultMessages.get(0).getMessage();
+                        if (msg.getFields().size() > 0) {
+                            for(String rtnField : rtnFields) {
+                                try {
+                                    LOG.debug("Current return field: {}", rtnField);
+                                    String returnStrField = String.valueOf(msg.getField(rtnField));
+                                    if (!returnStrField.isEmpty()) {
+                                        LOG.debug("Field: {}, Value: {}", rtnField, returnStrField);
+                                        resultList.add(returnStrField);
+                                        LOG.debug("Added value to resultList");
+                                    } else {
+                                        LOG.debug("Return field is empty");
+                                    }
+                                } catch(Exception e) {
+                                    LOG.debug("Unable to retrieve field value: {} for field {}", e.getMessage(), rtnField);
+                                    resultList.add("No match found");
+                                }
+                            }
+                        }
+
+                        if (resultList.isEmpty()) {
+                            LOG.debug("Return List is empty. Exiting");
+                            return blankList;
+                        }
+                        else
+                        {
+                            LOG.debug("Return List not empty. The return field(s) are {}, the values is {}", rtnFields.toString(), resultList.toString());
+                            return resultList;
+                        }
+
+                    } catch(Exception e) {
+                        LOG.debug("Error retrieving message: {} {}", e.getMessage(), e.toString());
+                        return blankList;
+                    }
+                } else {
+                    LOG.debug("No results");
+                    return blankList;
                 }
             }
         } catch(SearchPhaseExecutionException e) {
             LOG.debug("Unable to execute search: {}", e.getMessage());
-            return Collections.emptyList();
+            return blankList;
         }
     }
 

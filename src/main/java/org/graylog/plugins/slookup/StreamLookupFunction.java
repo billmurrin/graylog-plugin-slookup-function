@@ -90,8 +90,13 @@ public class StreamLookupFunction extends AbstractFunction<List> {
 
         this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
 
-        this.query = dstField + ":" + evaluationContext.currentMessage().getField(srcField).toString();
-        LOG.debug("Query: {}", this.query.toString());
+        String srcFieldValue = evaluationContext.currentMessage().getField(srcField).toString();
+        String escapeChars ="[\\\\+\\-\\!\\(\\)\\:\\^\\]\\{\\}\\~\\*\\?]";
+
+        if (!dstField.equals("timestamp")) {
+            this.query = dstField + ":" + srcFieldValue.replaceAll(escapeChars, "\\\\$0");
+            LOG.info("Query: {}", this.query.toString());
+        }
 
         this.filter = "streams:" + stream;
         LOG.debug("Filter: {}", this.filter.toString());
@@ -120,14 +125,14 @@ public class StreamLookupFunction extends AbstractFunction<List> {
             SearchResult response = this.searches.search(searchesConfig);
             LOG.debug("Search config - field: {}, order: {}", searchesConfig.sorting().getField().toString(), searchesConfig.sorting().asElastic().toString());
             if (response.getResults().size() == 0) {
-                LOG.debug("No Search Results observed.");
+                LOG.info("No Search Results observed.");
                 return blankList;
             }
             else
             {
 
                 if (response.getResults().size() >= 1) {
-                    LOG.debug("There are results");
+                    LOG.info("There are results");
                     List<ResultMessage> resultMessages = response.getResults();
                     try {
                         //Map<String, Object> resultFields = resultMessages.get(0).getMessage().getFields();

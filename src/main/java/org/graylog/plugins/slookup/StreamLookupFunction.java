@@ -95,7 +95,7 @@ public class StreamLookupFunction extends AbstractFunction<List> {
 
         if (!dstField.equals("timestamp")) {
             this.query = dstField + ":" + srcFieldValue.replaceAll(escapeChars, "\\\\$0");
-            LOG.info("Query: {}", this.query.toString());
+            LOG.debug("SLookup Query: {}", this.query.toString());
         }
 
         this.filter = "streams:" + stream;
@@ -125,14 +125,14 @@ public class StreamLookupFunction extends AbstractFunction<List> {
             SearchResult response = this.searches.search(searchesConfig);
             LOG.debug("Search config - field: {}, order: {}", searchesConfig.sorting().getField().toString(), searchesConfig.sorting().asElastic().toString());
             if (response.getResults().size() == 0) {
-                LOG.info("No Search Results observed.");
+                LOG.debug("No Search Results observed.");
                 return blankList;
             }
             else
             {
 
                 if (response.getResults().size() >= 1) {
-                    LOG.info("There are results");
+                    LOG.debug("There are results");
                     List<ResultMessage> resultMessages = response.getResults();
                     try {
                         //Map<String, Object> resultFields = resultMessages.get(0).getMessage().getFields();

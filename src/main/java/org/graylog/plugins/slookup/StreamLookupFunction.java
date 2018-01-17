@@ -20,14 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
-public class StreamLookupFunction extends AbstractFunction<String> {
+public class StreamLookupFunction extends AbstractFunction<List> {
     Logger LOG = LoggerFactory.getLogger(Function.class);
 
     public static final String NAME = "slookup";
     private static final String STREAM_ARG = "stream";
     private static final String SRC_FIELD_ARG = "srcField";
     private static final String DST_FIELD_ARG = "dstField";
-    private static final String RTN_FIELD_ARG = "rtnField";
+    private static final String RTN_FIELDS_ARG = "rtnFields";
     private static final String TIMERANGE_ARG = "timeRange";
     private static final String SORTORDER_ARG = "sortOrder";
 
@@ -55,9 +55,9 @@ public class StreamLookupFunction extends AbstractFunction<String> {
             .string(DST_FIELD_ARG)
             .description("The destination field that will be matched against with the source field. If blank, uses the value of the source field.")
             .build();
-    private final ParameterDescriptor<String, String> rtnFieldParam = ParameterDescriptor
-            .string(RTN_FIELD_ARG)
-            .description("The field to return if there is a value match.")
+    private final ParameterDescriptor<List, List> rtnFieldsParam = ParameterDescriptor
+            .type(RTN_FIELDS_ARG, List.class)
+            .description("The field(s) to return if there is a value match.")
             .build();
     private final ParameterDescriptor<String, String> timeRangeParam = ParameterDescriptor
             .string(TIMERANGE_ARG)
@@ -74,23 +74,32 @@ public class StreamLookupFunction extends AbstractFunction<String> {
     }
 
     @Override
-    public String evaluate(FunctionArgs functionArgs, EvaluationContext evaluationContext) {
+    public List<String> evaluate(FunctionArgs functionArgs, EvaluationContext evaluationContext) {
         String stream = streamParam.required(functionArgs, evaluationContext);
         String srcField = srcFieldParam.required(functionArgs, evaluationContext);
         String dstField = dstFieldParam.required(functionArgs, evaluationContext);
-        String rtnField = rtnFieldParam.required(functionArgs, evaluationContext);
+        List<String> rtnFields = (List<String>) rtnFieldsParam.required(functionArgs, evaluationContext);
         Integer timeRange = Integer.parseInt(timeRangeParam.required(functionArgs, evaluationContext));
         String sortField = sortOrderParam.required(functionArgs, evaluationContext);
+        List<String> resultList = new ArrayList<String>();
+        List<String> blankList = new ArrayList<String>();
 
-        List<String> fields = new ArrayList<>();
-
-        fields.add(rtnField);
+        for (String rtnfl : rtnFields) {
+            blankList.add("No match found");
+        }
 
         this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
 
-        this.query = dstField + ":" + evaluationContext.currentMessage().getField(srcField).toString();
+        String srcFieldValue = evaluationContext.currentMessage().getField(srcField).toString();
+        String escapeChars ="[\\\\+\\-\\!\\(\\)\\:\\^\\]\\{\\}\\~\\*\\?]";
+
+        if (!dstField.equals("timestamp")) {
+            this.query = dstField + ":" + srcFieldValue.replaceAll(escapeChars, "\\\\$0");
+            LOG.debug("SLookup Query: {}", this.query.toString());
+        }
 
         this.filter = "streams:" + stream;
+        LOG.debug("Filter: {}", this.filter.toString());
 
         if (sortField.equals("asc")) {
             this.sortType = new Sorting("timestamp", Sorting.Direction.ASC);
@@ -105,7 +114,7 @@ public class StreamLookupFunction extends AbstractFunction<String> {
         final SearchesConfig searchesConfig = SearchesConfig.builder()
                 .query(this.query)
                 .filter(this.filter)
-                .fields(fields)
+                .fields(rtnFields)
                 .range(this.timeRange)
                 .sorting(this.sortType)
                 .limit(1)
@@ -116,38 +125,69 @@ public class StreamLookupFunction extends AbstractFunction<String> {
             SearchResult response = this.searches.search(searchesConfig);
             LOG.debug("Search config - field: {}, order: {}", searchesConfig.sorting().getField().toString(), searchesConfig.sorting().asElastic().toString());
             if (response.getResults().size() == 0) {
-                LOG.info("No Search Results observed.");
-                return "";
+                LOG.debug("No Search Results observed.");
+                return blankList;
             }
             else
             {
-                List<ResultMessage> resultMessages = response.getResults();
-                Message msg = resultMessages.get(0).getMessage();
-                String returnField = msg.getField(rtnField).toString();
-                LOG.debug("The return field is {}, the value is {}", rtnField, returnField);
-                if (returnField.isEmpty()) {
-                    return "";
-                }
-                else
-                {
-                    return returnField;
+
+                if (response.getResults().size() >= 1) {
+                    LOG.debug("There are results");
+                    List<ResultMessage> resultMessages = response.getResults();
+                    try {
+                        //Map<String, Object> resultFields = resultMessages.get(0).getMessage().getFields();
+                        Message msg = resultMessages.get(0).getMessage();
+                        if (msg.getFields().size() > 0) {
+                            for(String rtnField : rtnFields) {
+                                try {
+                                    LOG.debug("Current return field: {}", rtnField);
+                                    String returnStrField = String.valueOf(msg.getField(rtnField));
+                                    if (!returnStrField.isEmpty()) {
+                                        LOG.debug("Field: {}, Value: {}", rtnField, returnStrField);
+                                        resultList.add(returnStrField);
+                                        LOG.debug("Added value to resultList");
+                                    } else {
+                                        LOG.debug("Return field is empty");
+                                    }
+                                } catch(Exception e) {
+                                    LOG.debug("Unable to retrieve field value: {} for field {}", e.getMessage(), rtnField);
+                                    resultList.add("No match found");
+                                }
+                            }
+                        }
+
+                        if (resultList.isEmpty()) {
+                            LOG.debug("Return List is empty. Exiting");
+                            return blankList;
+                        }
+                        else
+                        {
+                            LOG.debug("Return List not empty. The return field(s) are {}, the values is {}", rtnFields.toString(), resultList.toString());
+                            return resultList;
+                        }
+
+                    } catch(Exception e) {
+                        LOG.debug("Error retrieving message: {} {}", e.getMessage(), e.toString());
+                        return blankList;
+                    }
+                } else {
+                    LOG.debug("No results");
+                    return blankList;
                 }
             }
         } catch(SearchPhaseExecutionException e) {
             LOG.debug("Unable to execute search: {}", e.getMessage());
-            return "";
+            return blankList;
         }
     }
 
     @Override
-    public FunctionDescriptor<String> descriptor() {
-        return FunctionDescriptor.<String>builder()
+    public FunctionDescriptor<List> descriptor() {
+        return FunctionDescriptor.<List>builder()
                 .name(NAME)
                 .description("Conduct a lookup in a remote stream and return a field value based on a matching source field. Similar to VLOOKUP in Excel")
-                .params(of(streamParam, srcFieldParam, dstFieldParam, rtnFieldParam, timeRangeParam, sortOrderParam))
-                .returnType(String.class)
+                .params(of(streamParam, srcFieldParam, dstFieldParam, rtnFieldsParam, timeRangeParam, sortOrderParam))
+                .returnType(List.class)
                 .build();
     }
-
-
 }

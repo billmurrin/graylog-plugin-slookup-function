@@ -9,7 +9,7 @@
 
     <groupId>org.graylog.plugins</groupId>
     <artifactId>graylog-plugin-slookup-function</artifactId>
-    <version>2.0.0</version>
+    <version>4.1.0</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -34,7 +34,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <graylog.version>2.3.2</graylog.version>
+        <graylog.version>4.1.0</graylog.version>
         <graylog.plugin-dir>/usr/share/graylog-server/plugin</graylog.plugin-dir>
     </properties>
 
@@ -46,10 +46,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.graylog.plugins</groupId>
-            <artifactId>graylog-plugin-pipeline-processor</artifactId>
-            <version>1.1.1</version>
-            <scope>provided</scope>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>7.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>7.7.0</version>
         </dependency>
     </dependencies>
 

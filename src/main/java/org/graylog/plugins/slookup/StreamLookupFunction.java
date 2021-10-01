@@ -1,6 +1,8 @@
 package org.graylog.plugins.slookup;
 
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
+import org.elasticsearch.search.sort.SortOrder;
+
 import org.graylog2.indexer.results.ResultMessage;
 import org.graylog2.indexer.results.SearchResult;
 import org.graylog2.indexer.searches.SearchesConfig;
@@ -12,6 +14,7 @@ import org.graylog2.plugin.indexer.searches.timeranges.RelativeRange;
 import org.graylog.plugins.pipelineprocessor.EvaluationContext;
 import org.graylog.plugins.pipelineprocessor.ast.expressions.Expression;
 import org.graylog.plugins.pipelineprocessor.ast.functions.*;
+
 import static com.google.common.collect.ImmutableList.of;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +91,13 @@ public class StreamLookupFunction extends AbstractFunction<List> {
             blankList.add("No match found");
         }
 
-        this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
+        //this.timeRange = RelativeRange.builder().type("relative").range(timeRange).build();
+	//this was changed in Graylog 4.1 to include an optional from/to instead of just range
+        try {
+            this.timeRange = RelativeRange.create(timeRange.intValue());
+        } catch (Exception e) {
+            LOG.info(e.getMessage());
+        }	 
 
         String srcFieldValue = evaluationContext.currentMessage().getField(srcField).toString();
         String escapeChars ="[\\\\+\\-\\!\\(\\)\\:\\^\\]\\{\\}\\~\\*\\?]";
@@ -103,12 +112,12 @@ public class StreamLookupFunction extends AbstractFunction<List> {
 
         if (sortField.equals("asc")) {
             this.sortType = new Sorting("timestamp", Sorting.Direction.ASC);
-            LOG.debug("This sortType  - field: {}, order: {}", this.sortType.getField().toString(), this.sortType.asElastic().toString());
+            LOG.debug("This sortType  - field: {}, order: {}", this.sortType.getField().toString(), this.sortType.toString());
         }
         else
         {
             this.sortType = new Sorting("timestamp", Sorting.Direction.DESC);
-            LOG.debug("This sortType  - field: {}, order: {}", this.sortType.getField().toString(), this.sortType.asElastic().toString());
+            LOG.debug("This sortType  - field: {}, order: {}", this.sortType.getField().toString(), this.sortType.toString());
         }
 
         final SearchesConfig searchesConfig = SearchesConfig.builder()
@@ -123,7 +132,7 @@ public class StreamLookupFunction extends AbstractFunction<List> {
 
         try {
             SearchResult response = this.searches.search(searchesConfig);
-            LOG.debug("Search config - field: {}, order: {}", searchesConfig.sorting().getField().toString(), searchesConfig.sorting().asElastic().toString());
+            LOG.debug("Search config - field: {}, order: {}", searchesConfig.sorting().getField().toString(), searchesConfig.sorting().toString());
             if (response.getResults().size() == 0) {
                 LOG.debug("No Search Results observed.");
                 return blankList;
